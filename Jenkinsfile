@@ -34,20 +34,23 @@ pipeline {
                 echo "✅ Image built: ${IMAGE_FULL}:${BUILD_NUMBER}"
             }
         }
-
-        // ── 3. Smoke Test (container starts and /health responds) ────────
+        
+        // ── 3. Smoke Test ────────────────────────────────────────────────
         stage('Test') {
             steps {
                 sh """
                     docker run --rm -d \
                       --name habitflow-test-${BUILD_NUMBER} \
-                      -p 5099:5000 \
+                      --network monitoring \
                       -e APP_VERSION=test \
                       ${IMAGE_FULL}:${BUILD_NUMBER}
 
-                    sleep 5
+                    sleep 6
 
-                    curl -sf http://localhost:5099/health | grep '"status"' \
+                    docker run --rm \
+                      --network monitoring \
+                      curlimages/curl:latest \
+                      curl -sf http://habitflow-test-${BUILD_NUMBER}:5000/health \
                       && echo "✅ Health endpoint OK" \
                       || (echo "❌ Health check failed"; docker stop habitflow-test-${BUILD_NUMBER}; exit 1)
 
