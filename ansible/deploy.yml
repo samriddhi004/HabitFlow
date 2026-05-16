@@ -35,11 +35,13 @@
         {{ image_full }}:{{ image_tag }}
 
     - name: Wait for app to be healthy
-      uri:
-        url: "http://localhost:{{ app_port }}/health"
-        status_code: 200
+      command: >
+        docker run --rm
+        --network monitoring
+        curlimages/curl:latest
+        curl -sf http://{{ container_name }}:5000/health
       register: result
-      until: result.status == 200
+      until: result.rc == 0
       retries: 12
       delay: 5
 
