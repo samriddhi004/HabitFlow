@@ -1,0 +1,62 @@
+{
+  "title": "HabitFlow — Live Monitor",
+  "uid": "habitflow-v1",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "time": {"from": "now-1h", "to": "now"},
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Total Check-ins",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "habitflow_checkins_total", "legendFormat": "Check-ins"}],
+      "options": {"colorMode": "background", "graphMode": "area"}
+    },
+    {
+      "id": 2, "type": "stat", "title": "Nudges Fired",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "habitflow_nudges_fired_total", "legendFormat": "Nudges"}],
+      "options": {"colorMode": "background"}
+    },
+    {
+      "id": 3, "type": "stat", "title": "Active Habits",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "habitflow_active_habits", "legendFormat": "Habits"}],
+      "options": {"colorMode": "background"}
+    },
+    {
+      "id": 4, "type": "stat", "title": "Broken Streaks",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "habitflow_broken_streaks_total", "legendFormat": "Broken"}],
+      "options": {"colorMode": "background"}
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Check-in Rate",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "rate(habitflow_checkins_total[5m])", "legendFormat": "check-ins/s"}]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Nudges Over Time",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "rate(habitflow_nudges_fired_total[5m])", "legendFormat": "nudges/s"}]
+    },
+    {
+      "id": 7, "type": "timeseries", "title": "Host CPU %",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode='idle'}[5m])) * 100)", "legendFormat": "CPU %"}]
+    },
+    {
+      "id": 8, "type": "timeseries", "title": "Host Memory %",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "datasource": "Prometheus",
+      "targets": [{"expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100", "legendFormat": "RAM %"}]
+    }
+  ]
+}

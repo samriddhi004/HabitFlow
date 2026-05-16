@@ -1,0 +1,26 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+scrape_configs:
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # The HabitFlow app — exposes /metrics with custom counters + gauges
+  - job_name: 'habitflow'
+    static_configs:
+      - targets: ['habitflow-app:5000']
+    metrics_path: /metrics
+
+  # Host machine metrics (CPU, RAM, disk)
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # Jenkins build metrics (requires Prometheus plugin in Jenkins)
+  - job_name: 'jenkins'
+    metrics_path: '/prometheus'
+    static_configs:
+      - targets: ['jenkins:8080']
