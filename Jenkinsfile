@@ -34,7 +34,7 @@ pipeline {
                 echo "✅ Image built: ${IMAGE_FULL}:${BUILD_NUMBER}"
             }
         }
-        
+
         // ── 3. Smoke Test ────────────────────────────────────────────────
         stage('Test') {
             steps {
@@ -98,8 +98,11 @@ pipeline {
             steps {
                 sh """
                     sleep 5
-                    curl -sf http://localhost:${APP_PORT}/health \
-                      && echo "✅ App is live on port ${APP_PORT}" \
+                    docker run --rm \
+                      --network monitoring \
+                      curlimages/curl:latest \
+                      curl -sf http://habitflow-app:5000/health \
+                      && echo "✅ App is live" \
                       || (echo "❌ Post-deploy health check FAILED"; exit 1)
                 """
             }
