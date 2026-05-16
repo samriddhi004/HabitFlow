@@ -1,0 +1,70 @@
+---
+# ansible/deploy.yml
+# Called by Jenkins in the Deploy stage.
+# Pulls the new image and (re)starts the container on the target host.
+
+- name: Deploy HabitFlow
+  hosts: app_servers
+  become: yes
+
+  vars:
+    image_full:     "yourdockerhubuser/habitflow"   # overridden by Jenkins -e flag
+    image_tag:      "latest"
+    container_name: "habitflow-app"
+    app_port:       5000
+    data_volume:    "habitflow_data"
+
+  tasks:
+
+    - name: Ensure Docker is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Create data volume (persists SQLite DB across deploys)
+      community.docker.docker_volume:
+        name: "{{ data_volume }}"
+        state: present
+
+    - name: Pull new image
+      community.docker.docker_image:
+        name: "{{ image_full }}:{{ image_tag }}"
+        source: pull
+        force_source: yes
+
+    - name: Stop and remove old container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: absent
+        force_kill: yes
+      ignore_errors: yes
+
+    - name: Start new container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ image_full }}:{{ image_tag }}"
+        state: started
+        restart_policy: unless-stopped
+        ports:
+          - "{{ app_port }}:5000"
+        volumes:
+          - "{{ data_volume }}:/data"
+        networks:
+          - name: monitoring
+        env:
+          APP_VERSION: "{{ image_tag }}"
+          DB_PATH: "/data/habits.db"
+
+    - name: Wait for app to be healthy
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 12
+      delay: 5
+
+    - name: Deployment result
+      debug:
+        msg: "✅ HabitFlow {{ image_tag }} is live on port {{ app_port }}"
